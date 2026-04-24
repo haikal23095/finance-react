@@ -54,21 +54,29 @@ Ikuti langkah-langkah ini untuk menjalankan aplikasi di Google Cloud Run dengan 
     gcloud sql users create luxuser --instance=db-finance --password=luxpassword
     ```
 
-### 2. Build Image ke Google Container Registry
+### 2. Persiapan Artifact Registry
 
-Jalankan perintah ini di root folder proyek:
+Google sekarang mewajibkan penggunaan Artifact Registry untuk menyimpan Docker image.
+
+1.  **Buat Repository**:
+    ```bash
+    gcloud artifacts repositories create cloud-run-source-deploy \
+       --repository-format=docker \
+       --location=asia-southeast2 \
+       --description="Docker repository for Cloud Run"
+    ```
+
+### 3. Build & Deploy Manual (Opsional)
+
+Jika ingin mencoba deploy manual tanpa CI/CD:
 
 ```bash
-gcloud builds submit --tag gcr.io/$(gcloud config get-value project)/lux-finance
-```
+# Build
+gcloud builds submit --tag asia-southeast2-docker.pkg.dev/$(gcloud config get-value project)/cloud-run-source-deploy/lux-finance
 
-### 3. Deploy ke Cloud Run
-
-Deploy image yang sudah di-build dan sambungkan ke Cloud SQL:
-
-```bash
+# Deploy
 gcloud run deploy lux-finance \
-  --image gcr.io/$(gcloud config get-value project)/lux-finance \
+  --image asia-southeast2-docker.pkg.dev/$(gcloud config get-value project)/cloud-run-source-deploy/lux-finance \
   --platform managed \
   --region asia-southeast2 \
   --allow-unauthenticated \
@@ -94,10 +102,11 @@ Aplikasi ini sudah dilengkapi dengan workflow GitHub Actions untuk otomatisasi b
 
 1.  Buka **IAM & Admin** > **Service Accounts**.
 2.  Buat Service Account baru (misal: `github-actions-deployer`).
-3.  Tambahkan role:
+3.  Tambahkan role penting ini:
     - `Cloud Build Editor`
     - `Cloud Run Admin`
     - `Cloud SQL Client`
+    - `Artifact Registry Administrator` (Wajib untuk push image)
     - `Storage Admin`
     - `Service Account User`
 4.  Buat **JSON Key**, download, dan simpan isinya.
