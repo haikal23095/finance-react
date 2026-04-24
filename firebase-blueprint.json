@@ -1,0 +1,43 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user-specific information and settings.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique ID of the user." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "description": "The user's profile picture URL." },
+        "currency": { "type": "string", "description": "The user's preferred currency (e.g., USD, IDR)." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user profile was created." }
+      },
+      "required": ["uid", "email"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Represents a single financial transaction (income or expense).",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The ID of the user who owns this transaction." },
+        "type": { "type": "string", "enum": ["income", "expense"], "description": "The type of transaction." },
+        "amount": { "type": "number", "description": "The amount of the transaction." },
+        "category": { "type": "string", "description": "The category of the transaction (e.g., Food, Salary, Rent)." },
+        "description": { "type": "string", "description": "A brief description of the transaction." },
+        "date": { "type": "string", "format": "date-time", "description": "The date and time of the transaction." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the transaction was recorded." }
+      },
+      "required": ["uid", "type", "amount", "category", "date"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Collection of user profiles."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Collection of financial transactions."
+    }
+  }
+}

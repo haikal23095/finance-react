@@ -1,0 +1,26 @@
+# Gunakan Node.js image sebagai base
+FROM node:20-alpine
+
+# Set working directory
+WORKDIR /app
+
+# Salin package.json dan package-lock.json jika ada
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Salin semua source code ke dalam container
+COPY . .
+
+# Build aplikasi (karena ini Vite + React)
+RUN npm run build
+
+# Expose port yang digunakan aplikasi (misal 5173 untuk Vite atau port server Express)
+# Berdasarkan package.json scripts dev: tsx server.ts, sepertinya ada server API juga
+EXPOSE 3000
+
+# Jalankan aplikasi (Sesuaikan dengan script start atau dev)
+# Menggunakan tsx server.ts (dev mode) atau node dist/server.js (jika dibuild)
+# Untuk demo ini kita gunakan dev mode agar mudah dijalankan
+CMD ["npm", "run", "dev"]
