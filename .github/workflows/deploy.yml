@@ -1,0 +1,50 @@
+name: Build and Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - main # Sesuaikan nama branch nya
+
+env:
+  PROJECT_ID: brave-pen-451701-f2
+  SERVICE: lux-finance
+  REGION: asia-southeast2
+  INSTANCE_NAME: db-finance
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
+
+      - name: Set up Cloud SDK
+        uses: "google-github-actions/setup-gcloud@v2"
+
+      - name: Authorize Docker
+        run: gcloud auth configure-docker gcr.io --quiet
+
+      - name: Build and Push Container
+        run: |-
+          docker build -t gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }} .
+          docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}
+
+      - name: Deploy to Cloud Run
+        run: |-
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --add-cloudsql-instances ${{ env.PROJECT_ID }}:${{ env.REGION }}:${{ env.INSTANCE_NAME }} \
+            --set-env-vars="NODE_ENV=production,CLOUD_SQL_CONNECTION_NAME=${{ env.PROJECT_ID }}:${{ env.REGION }}:${{ env.INSTANCE_NAME }},MYSQL_USER=${{ secrets.MYSQL_USER }},MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }},MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }},JWT_SECRET=${{ secrets.JWT_SECRET }}"

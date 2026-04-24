@@ -83,3 +83,45 @@ gcloud run deploy lux-finance \
 - **Vite Allowed Hosts**: Jika muncul error "Host not allowed", pastikan `allowedHosts: true` sudah terset di `vite.config.ts`.
 
 Aplikasi Anda akan siap digunakan pada URL yang diberikan oleh Cloud Run setelah proses deploy selesai.
+
+---
+
+# Panduan CI/CD (GitHub Actions)
+
+Aplikasi ini sudah dilengkapi dengan workflow GitHub Actions untuk otomatisasi build dan deploy setiap kali Anda melakukan `git push` ke branch `main`.
+
+### 1. Buat Service Account di Google Cloud
+
+1.  Buka **IAM & Admin** > **Service Accounts**.
+2.  Buat Service Account baru (misal: `github-actions-deployer`).
+3.  Tambahkan role:
+    - `Cloud Build Editor`
+    - `Cloud Run Admin`
+    - `Cloud SQL Client`
+    - `Storage Admin`
+    - `Service Account User`
+4.  Buat **JSON Key**, download, dan simpan isinya.
+
+### 2. Konfigurasi GitHub Secrets
+
+Buka repository GitHub Anda, pilih **Settings** > **Secrets and variables** > **Actions**, lalu tambahkan secret berikut:
+
+| Nama Secret      | Deskripsi                                         |
+| :--------------- | :------------------------------------------------ |
+| `GCP_SA_KEY`     | Seluruh isi file JSON Service Account tadi        |
+| `MYSQL_USER`     | Username database (contoh: `luxuser`)             |
+| `MYSQL_PASSWORD` | Password database (contoh: `luxpassword`)         |
+| `MYSQL_DATABASE` | Nama database (contoh: `luxfinance`)              |
+| `JWT_SECRET`     | String rahasia untuk JWT token (min. 32 karakter) |
+
+### 3. Aktivasi
+
+Setelah semua secret terpasang, cukup jalankan:
+
+```bash
+git add .
+git commit -m "Add CI/CD workflow"
+git push origin main
+```
+
+Pantau prosesnya di tab **Actions** pada repository GitHub Anda.
