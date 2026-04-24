@@ -23,6 +23,12 @@ const sequelize = new Sequelize(
   {
     host: process.env.MYSQL_HOST || "localhost",
     dialect: "mysql",
+    dialectOptions:
+      process.env.NODE_ENV === "production"
+        ? {
+            socketPath: `/cloudsql/${process.env.CLOUD_SQL_CONNECTION_NAME}`,
+          }
+        : {},
     logging: false,
     retry: {
       max: 3,

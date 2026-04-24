@@ -10,11 +10,76 @@ View your app in AI Studio: https://ai.studio/apps/c02a8298-18d5-4b27-8af4-69819
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
    `npm install`
 2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
 3. Run the app:
    `npm run dev`
+
+---
+
+# Panduan Deployment Lokal (Docker)
+
+Gunakan metode ini jika Anda ingin menjalankan aplikasi dan database MySQL di komputer lokal menggunakan Docker.
+
+1.  **Persiapan**: Pastikan Docker dan Docker Compose sudah terinstal.
+2.  **Jalankan Stack**:
+    ```bash
+    docker-compose up --build
+    ```
+3.  **Akses Aplikasi**: Buka `http://localhost:3000` di browser Anda.
+    - Database MySQL lokal berjalan di port `3307` (Host).
+    - Konfigurasi database otomatis menggunakan nilai di `docker-compose.yml`.
+
+> **Catatan**: Jika Anda ingin melakukan build manual menggunakan Dockerfile lokal, gunakan: `docker build -f Dockerfile-local -t lux-finance-local .`
+
+---
+
+# Panduan Deployment ke Google Cloud
+
+Ikuti langkah-langkah ini untuk menjalankan aplikasi di Google Cloud Run dengan Google Cloud SQL.
+
+### 1. Persiapan Database (Cloud SQL)
+
+1.  **Buat Instance Cloud SQL**:
+    Buat instance MySQL (misal: `db-finance`) di region `asia-southeast2` melalui Google Cloud Console.
+2.  **Buat Database**:
+    ```bash
+    gcloud sql databases create luxfinance --instance=db-finance
+    ```
+3.  **Buat User Database**:
+    ```bash
+    gcloud sql users create luxuser --instance=db-finance --password=luxpassword
+    ```
+
+### 2. Build Image ke Google Container Registry
+
+Jalankan perintah ini di root folder proyek:
+
+```bash
+gcloud builds submit --tag gcr.io/$(gcloud config get-value project)/lux-finance
+```
+
+### 3. Deploy ke Cloud Run
+
+Deploy image yang sudah di-build dan sambungkan ke Cloud SQL:
+
+```bash
+gcloud run deploy lux-finance \
+  --image gcr.io/$(gcloud config get-value project)/lux-finance \
+  --platform managed \
+  --region asia-southeast2 \
+  --allow-unauthenticated \
+  --add-cloudsql-instances=$(gcloud config get-value project):asia-southeast2:db-finance \
+  --set-env-vars="NODE_ENV=production,CLOUD_SQL_CONNECTION_NAME=$(gcloud config get-value project):asia-southeast2:db-finance,MYSQL_USER=luxuser,MYSQL_PASSWORD=luxpassword,MYSQL_DATABASE=luxfinance,JWT_SECRET=BUAT_SECRET_RANDOM_DISINI"
+```
+
+### 4. Konfigurasi Lanjutan (Jika Diperlukan)
+
+- **JWT_SECRET**: Buat string acak untuk keamanan token (misal: `openssl rand -base64 32`).
+- **Aparatus Izin**: Pastikan Service Account Cloud Run memiliki role **Cloud SQL Client**.
+- **Vite Allowed Hosts**: Jika muncul error "Host not allowed", pastikan `allowedHosts: true` sudah terset di `vite.config.ts`.
+
+Aplikasi Anda akan siap digunakan pada URL yang diberikan oleh Cloud Run setelah proses deploy selesai.

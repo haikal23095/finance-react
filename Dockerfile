@@ -27,6 +27,7 @@ RUN npm install --only=production
 RUN npm install -g tsx
 
 # Cloud Run mendengarkan pada port 8080 secara default
+ENV NODE_ENV=production
 ENV PORT=8080
 EXPOSE 8080
 
