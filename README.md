@@ -8,9 +8,17 @@ This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/c02a8298-18d5-4b27-8af4-69819217e2f7
 
-## Run Locally
+## Persiapan & Prasyarat
 
-**Prerequisites:** Node.js
+Sebelum memulai, pastikan Anda sudah menginstal perangkat lunak berikut:
+
+- **Node.js**: Diperlukan untuk pengembangan lokal dan instalasi dependensi.
+- **Docker & Docker Compose**: Diperlukan untuk menjalankan seluruh stack (aplikasi + database) menggunakan container.
+- **Google Cloud CLI (gcloud)**: Diperlukan untuk proses deployment ke Google Cloud.
+- **MySQL Client**: (Opsional) Untuk mengakses atau mengelola database MySQL secara manual.
+- **Git**: Untuk manajemen versi dan CI/CD.
+
+## Run Locally
 
 1. Install dependencies:
    `npm install`
@@ -24,16 +32,15 @@ View your app in AI Studio: https://ai.studio/apps/c02a8298-18d5-4b27-8af4-69819
 
 Gunakan metode ini jika Anda ingin menjalankan aplikasi dan database MySQL di komputer lokal menggunakan Docker.
 
-1.  **Persiapan**: Pastikan Docker dan Docker Compose sudah terinstal.
-2.  **Jalankan Stack**:
+1.  **Jalankan Stack**:
     ```bash
     docker-compose up --build
     ```
-3.  **Akses Aplikasi**: Buka `http://localhost:3000` di browser Anda.
+2.  **Akses Aplikasi**: Buka `http://localhost:3000` di browser Anda.
     - Database MySQL lokal berjalan di port `3307` (Host).
     - Konfigurasi database otomatis menggunakan nilai di `docker-compose.yml`.
 
-> **Catatan**: Jika Anda ingin melakukan build manual menggunakan Dockerfile lokal, gunakan: `docker build -f Dockerfile-local -t lux-finance-local .`
+> **Catatan**: Secara default, `docker-compose.yml` telah dikonfigurasi untuk menggunakan `Dockerfile-local`. Jika Anda ingin melakukan build manual tanpa Docker Compose, gunakan: `docker build -f Dockerfile-local -t lux-finance-local .`
 
 ---
 
@@ -98,7 +105,16 @@ Aplikasi Anda akan siap digunakan pada URL yang diberikan oleh Cloud Run setelah
 
 Aplikasi ini sudah dilengkapi dengan workflow GitHub Actions untuk otomatisasi build dan deploy setiap kali Anda melakukan `git push` ke branch `main`.
 
-### 1. Buat Service Account di Google Cloud
+### 1. Persiapan Repository GitHub
+
+1.  Buat repository baru di [GitHub](https://github.com/new).
+2.  Inisialisasi git di folder project Anda (jika belum):
+    ```bash
+    git init
+    git remote add origin https://github.com/USERNAME_ANDA/NAMA_REPO_ANDA.git
+    ```
+
+### 2. Buat Service Account di Google Cloud
 
 1.  Buka **IAM & Admin** > **Service Accounts**.
 2.  Buat Service Account baru (misal: `github-actions-deployer`).
@@ -111,7 +127,7 @@ Aplikasi ini sudah dilengkapi dengan workflow GitHub Actions untuk otomatisasi b
     - `Service Account User`
 4.  Buat **JSON Key**, download, dan simpan isinya.
 
-### 2. Konfigurasi GitHub Secrets
+### 3. Konfigurasi GitHub Secrets
 
 Buka repository GitHub Anda, pilih **Settings** > **Secrets and variables** > **Actions**, lalu tambahkan secret berikut:
 
@@ -123,14 +139,15 @@ Buka repository GitHub Anda, pilih **Settings** > **Secrets and variables** > **
 | `MYSQL_DATABASE` | Nama database (contoh: `luxfinance`)              |
 | `JWT_SECRET`     | String rahasia untuk JWT token (min. 32 karakter) |
 
-### 3. Aktivasi
+### 4. Aktivasi
 
 Setelah semua secret terpasang, cukup jalankan:
 
 ```bash
 git add .
 git commit -m "Add CI/CD workflow"
-git push origin main
+git branch -M main
+git push -u origin main
 ```
 
 Pantau prosesnya di tab **Actions** pada repository GitHub Anda.
